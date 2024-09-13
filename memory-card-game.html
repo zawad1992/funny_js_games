@@ -8,73 +8,41 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f0f0f0;
-        }
-        .game-board {
-            display: grid;
-            grid-template-columns: repeat(4, 100px);
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .card {
-            width: 100px;
-            height: 100px;
-            background-color: #3498db;
-            border-radius: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 40px;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.3s ease-in-out;
-        }
-        .card.flipped {
-            transform: rotateY(180deg);
-            background-color: #2ecc71;
-        }
-        .card i {
-            display: none;
-        }
-        .card.flipped i {
-            display: block;
-        }
-        .controls {
-            margin-top: 20px;
-        }
+       body{font-family:Arial,sans-serif;background-color:#f0f0f0}.game-container{max-width:500px;margin:0 auto}.game-board{display:grid;grid-template-columns:repeat(auto-fit,100px);gap:10px;justify-content:center;margin:20px 0}.card{width:100px;height:100px;background-color:#3498db;border-radius:5px;display:flex;justify-content:center;align-items:center;font-size:40px;color:#fff;cursor:pointer;transition:transform .3s ease-in-out}.card.flipped{transform:rotateY(180deg);background-color:#2ecc71}.card i{display:none}.card.flipped i{display:block}.controls{text-align:center;margin-bottom:20px}#scoreboard{margin-top:20px}
     </style>
 </head>
 <body>
-    <div class="container d-flex justify-content-center">
-        <div class="row">
-            <div class="col-md-12">
-
-            <h1>Memory Card Game</h1>
+    <div class="container">
+        <div class="game-container">
+            <h1 class="text-center mt-4">Memory Card Game</h1>
             <div class="game-board"></div>
             <div class="controls">
                 <button class="btn btn-primary" id="newGame">New Game</button>
                 <button class="btn btn-warning" id="increaseDifficulty">Increase Difficulty</button>
             </div>
+            <div id="scoreboard">
+                <div class="alert alert-info" role="alert">
+                    <div id="accuracy"></div>
+                </div>
             </div>
         </div>
     </div>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <script>
-        const gameBoard = document.querySelector('.game-board');
-        const newGameBtn = document.getElementById('newGame');
-        const increaseDifficultyBtn = document.getElementById('increaseDifficulty');
+        // Game variables
         let cards = [];
         let flippedCards = [];
         let matchedPairs = 0;
         let difficulty = 4;
+        let totalMoves = 0;
+        let correctMoves = 0;
+        let gameActive = false;
+
+        
 
         const icons = [
             'fa-heart', 'fa-star', 'fa-smile', 'fa-sun', 'fa-moon', 'fa-car', 'fa-house', 'fa-tree',
@@ -85,6 +53,13 @@
             'fa-balance-scale', 'fa-bomb', 'fa-bug', 'fa-chess', 'fa-cloud', 'fa-coffee', 'fa-crow',
             'fa-dice', 'fa-dragon', 'fa-feather', 'fa-frog', 'fa-gift', 'fa-guitar', 'fa-hammer'
         ];
+
+        // DOM elements
+        const gameBoard = document.querySelector('.game-board');
+        const newGameBtn = document.querySelector('.controls button:nth-child(1)');
+        const increaseDifficultyBtn = document.querySelector('.controls button:nth-child(2)');
+        const accuracyDisplay = document.querySelector('#accuracy');
+        const scoreboard = document.querySelector('#scoreboard');
 
         function createCard(iconClass) {
             const card = document.createElement('div');
@@ -104,11 +79,12 @@
         }
 
         function flipCard() {
-            if (flippedCards.length < 2 && !this.classList.contains('flipped')) {
+            if (gameActive && flippedCards.length < 2 && !this.classList.contains('flipped')) {
                 this.classList.add('flipped');
                 flippedCards.push(this);
 
                 if (flippedCards.length === 2) {
+                    totalMoves++;
                     setTimeout(checkMatch, 500);
                 }
             }
@@ -117,9 +93,10 @@
         function checkMatch() {
             const [card1, card2] = flippedCards;
             if (card1.dataset.icon === card2.dataset.icon) {
+                correctMoves++;
                 matchedPairs++;
                 if (matchedPairs === cards.length / 2) {
-                    alert('Congratulations! You won!');
+                    endGame();
                 }
             } else {
                 card1.classList.remove('flipped');
@@ -128,12 +105,48 @@
             flippedCards = [];
         }
 
+        function endGame() {
+            gameActive = false;
+            const accuracy = (correctMoves / totalMoves) * 100;
+            accuracyDisplay.textContent = `Game Over! Accuracy: ${accuracy.toFixed(2)}%`;
+            Swal.fire({
+                title: 'Congratulations!',
+                text: `You won with an accuracy of ${accuracy.toFixed(2)}%`,
+                icon: 'success',
+                confirmButtonText: 'Cool'
+            })
+        }
+
         function startNewGame() {
             gameBoard.innerHTML = '';
             cards = generateCards(difficulty);
             cards.forEach(card => gameBoard.appendChild(card));
             matchedPairs = 0;
-            gameBoard.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(cards.length))}, 100px)`;
+            totalMoves = 0;
+            correctMoves = 0;
+            accuracyDisplay.textContent = '';
+            
+            // Reveal all cards initially
+            cards.forEach(card => card.classList.add('flipped'));
+            
+            // Set timer based on difficulty
+            const revealTime = 5000 + (difficulty - 4) * 1000; // 5 seconds base + 1 second per difficulty level above 4
+            gameActive = false;
+            
+            let timeLeft = Math.floor(revealTime / 1000);
+            updateScoreboard(`Memorize the cards! Time left: ${timeLeft}s`);
+            
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                updateScoreboard(`Memorize the cards! Time left: ${timeLeft}s`);
+            }, 1000);
+
+            setTimeout(() => {
+                cards.forEach(card => card.classList.remove('flipped'));
+                gameActive = true;
+                clearInterval(timerInterval);
+                updateScoreboard('Go!');
+            }, revealTime);
         }
 
         function increaseDifficulty() {
@@ -141,9 +154,19 @@
             startNewGame();
         }
 
+        function updateScoreboard(message) {
+            scoreboard.innerHTML = `
+                <div class="alert alert-info" role="alert">
+                    ${message}
+                </div>
+            `;
+        }
+
+        // Event listeners
         newGameBtn.addEventListener('click', startNewGame);
         increaseDifficultyBtn.addEventListener('click', increaseDifficulty);
 
+        // Start the game
         startNewGame();
     </script>
 </body>
