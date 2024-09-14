@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whack-a-Mole Game</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <style>
+        .mole-hole {
+            width: 100px;
+            height: 100px;
+            background-color: #28a745;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .mole {
+            width: 80px;
+            height: 80px;
+            background-image: url('assets/images/moles.png');
+            border-radius: 50%;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Whack-a-Mole</h1>
+        <div class="row mb-3">
+            <div class="col text-center">
+                <h3>Score: <span id="score">0</span></h3>
+            </div>
+            <div class="col text-center">
+                <h3>Time: <span id="time">30</span>s</h3>
+            </div>
+        </div>
+        <div class="row" id="game-board">
+            <!-- Mole holes will be generated here -->
+        </div>
+        <div class="row mt-3">
+            <div class="col text-center">
+                <button id="start-btn" class="btn btn-primary btn-lg">Start Game</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- <audio id="mole-appear" src="assets/sounds/mole-appear.mp3" preload="auto"></audio>
+    <audio id="mole-whack" src="assets/sounds/mole-whack.mp3" preload="auto"></audio> -->
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        const gameBoard = document.getElementById('game-board');
+        const scoreElement = document.getElementById('score');
+        const timeElement = document.getElementById('time');
+        const startButton = document.getElementById('start-btn');
+
+        const moleAppearSound = 'assets/sounds/mole-appear.mp3';
+        const moleWhackSound = 'assets/sounds/mole-whack.mp3';
+
+        // const moleAppearSound = document.getElementById('mole-appear');
+        // const moleWhackSound = document.getElementById('mole-whack');
+
+        let score = 0;
+        let timeLeft = 30;
+        let gameInterval;
+        let moleInterval;
+        let totalMoles = 0;
+
+        function createAudio(src) {
+            return new Audio(src);
+        }
+
+        function playSound(src) {
+            const sound = createAudio(src);
+            sound.play();
+        }
+
+        function createMoleHoles() {
+            for (let i = 0; i < 9; i++) {
+                const hole = document.createElement('div');
+                hole.className = 'col-4 mb-4';
+                hole.innerHTML = `
+                    <div class="mole-hole">
+                        <div class="mole" data-index="${i}"></div>
+                    </div>
+                `;
+                gameBoard.appendChild(hole);
+            }
+        }
+
+        function showRandomMole() {
+            playSound(moleAppearSound);
+
+            const moles = document.querySelectorAll('.mole');
+            moles.forEach(mole => mole.style.display = 'none');
+
+            const randomIndex = Math.floor(Math.random() * moles.length);
+            moles[randomIndex].style.display = 'block';
+
+
+            totalMoles++;
+        }
+
+        function whackMole(event) {
+            if (event.target.classList.contains('mole')) {
+                playSound(moleWhackSound);
+
+                score++;
+                scoreElement.textContent = score;
+                event.target.style.display = 'none';
+            }
+        }
+
+        function startGame() {
+            score = 0;
+            timeLeft = 30;
+            scoreElement.textContent = score;
+            timeElement.textContent = timeLeft;
+
+            gameBoard.addEventListener('click', whackMole);
+            startButton.disabled = true;
+
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                timeElement.textContent = timeLeft;
+
+                if (timeLeft === 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            moleInterval = setInterval(showRandomMole, 1000);
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            clearInterval(moleInterval);
+            gameBoard.removeEventListener('click', whackMole);
+            startButton.disabled = false;
+
+            var accuracy = (score / totalMoles) * 100;
+            accuracy = accuracy.toFixed(2);
+
+            Swal.fire({
+                title: 'Game over!',
+                text: `Your score: ${score} out of ${totalMoles} , Accuracy: ${accuracy}%`,
+                icon: 'info',
+                confirmButtonText: 'Cool'
+            })
+        }
+
+        createMoleHoles();
+        startButton.addEventListener('click', startGame);
+    </script>
+</body>
+</html>
