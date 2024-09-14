@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock, Paper, Scissors</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .choice-btn {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+        }
+        #game-area {
+            min-height: 200px;
+        }
+        .hand {
+            font-size: 5rem;
+            animation: shake 0.5s infinite;
+        }
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(5deg); }
+            75% { transform: rotate(-5deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .result-hand {
+            font-size: 5rem;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Rock, Paper, Scissors</h1>
+        <div id="game-area" class="row justify-content-center align-items-center mb-4">
+            <div class="col-md-6 text-center">
+                <div id="shaking-hands">
+                    <span class="hand">🤜</span>
+                    <span class="hand">🤛</span>
+                </div>
+                <div id="result-hands" style="display: none;">
+                    <span id="player-hand" class="result-hand"></span>
+                    <span id="computer-hand" class="result-hand"></span>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6 text-center">
+                <button id="rock" class="btn btn-primary choice-btn m-2">🪨</button>
+                <button id="paper" class="btn btn-primary choice-btn m-2">📄</button>
+                <button id="scissors" class="btn btn-primary choice-btn m-2">✂️</button>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <h2 id="result" class="text-center mb-3"></h2>
+                <h3 class="text-center">Score</h3>
+                <p class="text-center">Player: <span id="player-score">0</span> | Computer: <span id="computer-score">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const choices = ['rock', 'paper', 'scissors'];
+        const emojis = { 'rock': '🪨', 'paper': '📄', 'scissors': '✂️' };
+        const resultEl = document.getElementById('result');
+        const playerScoreEl = document.getElementById('player-score');
+        const computerScoreEl = document.getElementById('computer-score');
+        const shakingHandsEl = document.getElementById('shaking-hands');
+        const resultHandsEl = document.getElementById('result-hands');
+        const playerHandEl = document.getElementById('player-hand');
+        const computerHandEl = document.getElementById('computer-hand');
+        let playerScore = 0;
+        let computerScore = 0;
+        let computerSelection;
+
+        function computerPlay() {
+            return choices[Math.floor(Math.random() * choices.length)];
+        }
+
+        function playRound(playerSelection) {
+            if (playerSelection === computerSelection) {
+                return "It's a tie!";
+            } else if (
+                (playerSelection === 'rock' && computerSelection === 'scissors') ||
+                (playerSelection === 'paper' && computerSelection === 'rock') ||
+                (playerSelection === 'scissors' && computerSelection === 'paper')
+            ) {
+                playerScore++;
+                return "You win!";
+            } else {
+                computerScore++;
+                return "Computer wins!";
+            }
+        }
+
+        function updateScore() {
+            playerScoreEl.textContent = playerScore;
+            computerScoreEl.textContent = computerScore;
+        }
+
+        function handleChoice(e) {
+            const playerSelection = e.target.id;
+            const result = playRound(playerSelection);
+
+            shakingHandsEl.style.display = 'none';
+            resultHandsEl.style.display = 'block';
+
+            playerHandEl.textContent = emojis[playerSelection];
+            computerHandEl.textContent = emojis[computerSelection];
+
+            setTimeout(() => {
+                resultEl.textContent = `You chose ${playerSelection}, computer chose ${computerSelection}. ${result}`;
+                updateScore();
+
+                setTimeout(() => {
+                    shakingHandsEl.style.display = 'block';
+                    resultHandsEl.style.display = 'none';
+                    resultEl.textContent = '';
+                    computerSelection = computerPlay();
+                }, 2000);
+            }, 1000);
+        }
+
+        document.getElementById('rock').addEventListener('click', handleChoice);
+        document.getElementById('paper').addEventListener('click', handleChoice);
+        document.getElementById('scissors').addEventListener('click', handleChoice);
+
+        // Initialize the game
+        computerSelection = computerPlay();
+    </script>
+</body>
+</html>
