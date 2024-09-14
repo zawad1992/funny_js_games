@@ -42,12 +42,11 @@
         <div class="row mt-3">
             <div class="col text-center">
                 <button id="start-btn" class="btn btn-primary btn-lg">Start Game</button>
+                <button id="stop-btn" class="btn btn-danger btn-lg ml-2" disabled>Stop/Reset</button>
             </div>
         </div>
     </div>
 
-    <!-- <audio id="mole-appear" src="assets/sounds/mole-appear.mp3" preload="auto"></audio>
-    <audio id="mole-whack" src="assets/sounds/mole-whack.mp3" preload="auto"></audio> -->
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -56,18 +55,17 @@
         const scoreElement = document.getElementById('score');
         const timeElement = document.getElementById('time');
         const startButton = document.getElementById('start-btn');
+        const stopButton = document.getElementById('stop-btn');
 
         const moleAppearSound = 'assets/sounds/mole-appear.mp3';
         const moleWhackSound = 'assets/sounds/mole-whack.mp3';
-
-        // const moleAppearSound = document.getElementById('mole-appear');
-        // const moleWhackSound = document.getElementById('mole-whack');
 
         let score = 0;
         let timeLeft = 30;
         let gameInterval;
         let moleInterval;
         let totalMoles = 0;
+        let difficulty = 'easy';
 
         function createAudio(src) {
             return new Audio(src);
@@ -104,8 +102,9 @@
             totalMoles++;
         }
 
+
         function whackMole(event) {
-            if (event.target.classList.contains('mole')) {
+            if (event.target.classList.contains('mole') && event.target.style.display !== 'none') {
                 playSound(moleWhackSound);
 
                 score++;
@@ -117,11 +116,13 @@
         function startGame() {
             score = 0;
             timeLeft = 30;
+            totalMoles = 0;
             scoreElement.textContent = score;
             timeElement.textContent = timeLeft;
 
             gameBoard.addEventListener('click', whackMole);
             startButton.disabled = true;
+            stopButton.disabled = false;
 
             gameInterval = setInterval(() => {
                 timeLeft--;
@@ -136,11 +137,6 @@
         }
 
         function endGame() {
-            clearInterval(gameInterval);
-            clearInterval(moleInterval);
-            gameBoard.removeEventListener('click', whackMole);
-            startButton.disabled = false;
-
             var accuracy = (score / totalMoles) * 100;
             accuracy = accuracy.toFixed(2);
 
@@ -149,11 +145,32 @@
                 text: `Your score: ${score} out of ${totalMoles} , Accuracy: ${accuracy}%`,
                 icon: 'info',
                 confirmButtonText: 'Cool'
-            })
+            });
+            stopGame();
+        }
+
+        function stopGame() {
+            clearInterval(gameInterval);
+            clearInterval(moleInterval);
+            gameBoard.removeEventListener('click', whackMole);
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            // Remove this line: difficultySelect.disabled = false;
+
+            // Hide all moles
+            document.querySelectorAll('.mole').forEach(mole => mole.style.display = 'none');
+
+            // Reset score and time
+            score = 0;
+            timeLeft = 30;
+            totalMoles = 0;
+            scoreElement.textContent = score;
+            timeElement.textContent = timeLeft;
         }
 
         createMoleHoles();
         startButton.addEventListener('click', startGame);
+        stopButton.addEventListener('click', stopGame);
     </script>
 </body>
 </html>
